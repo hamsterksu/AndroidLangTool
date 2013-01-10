@@ -3,8 +3,4 @@ Bundle-Name: LangTool
 Main-Class: com.gdubina.tool.langutil.Tool
 Bundle-ClassPath: libs/commons-codec-1.5.jar,
  libs/dom4j-1.6.1.jar,
- libs/poi-3.9-20121203.jar,
- libs/poi-excelant-3.9-20121203.jar,
- libs/poi-ooxml-3.9-20121203.jar,
- libs/poi-ooxml-schemas-3.9-20121203.jar,
- libs/poi-scratchpad-3.9-20121203.jar
+ libs/poi-3.9-20121203.jar
