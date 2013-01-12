@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: AndroidLangTool
+Bundle-SymbolicName: com.androidtool.Lang; singleton:=true
+Bundle-Version: 1.0.5.qualifier
+Bundle-Activator: com.androidtool.lang.Activator
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime
+Bundle-ActivationPolicy: lazy
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Import-Package: org.eclipse.core.resources,
+ org.eclipse.jdt.core,
+ org.eclipse.jdt.ui,
+ org.eclipse.ui.part
+Bundle-ClassPath: .,
+ libs/LangTool_lib.jar
+Bundle-Vendor: hamsterksu@gmail.com

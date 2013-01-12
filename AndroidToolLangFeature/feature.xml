@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="AndroidTool.Lang"
+      label="AndroidTool.Lang"
+      version="1.0.5.qualifier"
+      provider-name="hamsterksu@gmail.com">
+
+   <description url="http://www.example.com/description">
+      [Enter Feature Description here.]
+   </description>
+
+   <copyright url="http://www.example.com/copyright">
+      [Enter Copyright Description here.]
+   </copyright>
+
+   <license url="http://www.example.com/license">
+      [Enter License Description here.]
+   </license>
+
+   <url>
+      <update url="http://dl.dropbox.com/u/8604560/plugins/android_tools_lang"/>
+   </url>
+
+   <plugin
+         id="com.androidtool.Lang"
+         download-size="0"
+         install-size="0"
+         version="1.0.5.qualifier"
+         unpack="false"/>
+
+</feature>

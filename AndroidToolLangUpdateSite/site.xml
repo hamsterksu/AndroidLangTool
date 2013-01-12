@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/AndroidTool.Lang_1.0.5.201301121408.jar" id="AndroidTool.Lang" version="1.0.5.201301121408">
+      <category name="com.androidtool.lang"/>
+   </feature>
+   <category-def name="com.androidtool.lang" label="com.androidtool.lang"/>
+</site>
