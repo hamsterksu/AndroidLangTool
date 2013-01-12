@@ -26,6 +26,6 @@ import: -i <input file>
 
 **input file** - name of excel file for importing to project 
 
-link to binary: http://goo.gl/NTPnc
+link to binary: http://goo.gl/5EaOg
 
 link to eclipse plugin: http://goo.gl/fwEkU
