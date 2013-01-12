@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -32,13 +33,15 @@ public class ToolExport {
 	private static final String DIR_VALUES = "values"; 
 	
 	private DocumentBuilder builder;
-	private File out;
+	private File outExcelFile;
 	private String project;
 	private Map<String, Integer> keysIndex;
+	private PrintStream out;
 	
-	public ToolExport() throws ParserConfigurationException{
+	public ToolExport(PrintStream out) throws ParserConfigurationException{
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		builder = dbf.newDocumentBuilder();
+		this.out = out == null ? System.out : out;
 	}
 
 	public static void main(String[] args) throws SAXException, IOException, ParserConfigurationException {
@@ -46,17 +49,21 @@ public class ToolExport {
 			System.out.println("Project dir is missed");
 			return;
 		}
-		run(args[0], args.length > 1 ? args[1] : null);
+		run(null, args[0], args.length > 1 ? args[1] : null);
 	}
 	
 	public static void run(String projectDir, String outputFile) throws SAXException, IOException, ParserConfigurationException {
+		run(null, projectDir, outputFile);
+	}
+	
+	public static void run(PrintStream out, String projectDir, String outputFile) throws SAXException, IOException, ParserConfigurationException {
+		ToolExport tool = new ToolExport(out);
 		if(projectDir == null || "".equals(projectDir)){
-			System.out.println("Project dir is missed");
+			tool.out.println("Project dir is missed");
 			return;
 		}
 		File project = new File(projectDir);
-		ToolExport tool = new ToolExport();
-		tool.out = new File(outputFile != null ? outputFile : "exported_strings_" + System.currentTimeMillis() + ".xls");
+		tool.outExcelFile = new File(outputFile != null ? outputFile : "exported_strings_" + System.currentTimeMillis() + ".xls");
 		tool.project = project.getName();
 		tool.export(project);
 	}
@@ -85,7 +92,7 @@ public class ToolExport {
 		if(!stringFile.exists()){
 			return;
 		}
-		exportLangToExcel(project, lang, getStrings(stringFile), out, keysIndex);
+		exportLangToExcel(project, lang, getStrings(stringFile), outExcelFile, keysIndex);
 	}
 	
 	private Map<String, Integer> exportDefLang(File valueDir) throws FileNotFoundException, IOException, SAXException{
@@ -93,7 +100,7 @@ public class ToolExport {
 		if(!stringFile.exists()){
 			return null;
 		}
-		return exportDefLangToExcel(project, getStrings(stringFile), out);
+		return exportDefLangToExcel(project, getStrings(stringFile), outExcelFile);
 	}
 	
 	private NodeList getStrings(File f) throws SAXException, IOException{
@@ -179,7 +186,9 @@ public class ToolExport {
 	}
 	
 	
-	private static Map<String, Integer> exportDefLangToExcel(String project, NodeList strings, File f) throws FileNotFoundException, IOException{
+	private Map<String, Integer> exportDefLangToExcel(String project, NodeList strings, File f) throws FileNotFoundException, IOException{
+		out.println();
+		out.println("Start processing DEFAULT language");
 		
 		Map<String, Integer> keys = new HashMap<String, Integer>();
 		
@@ -225,20 +234,22 @@ public class ToolExport {
 				
 				cell = row.createCell(1);
 				cell.setCellStyle(textStyle);
-				cell.setCellValue(deluminateText(item.getTextContent()));
+				cell.setCellValue(item.getTextContent());
 			}
 		}
 		sheet.createFreezePane(1, 1);
 		
-		FileOutputStream out = new FileOutputStream(f);
-		wb.write(out);
-		out.close();
+		FileOutputStream outFile = new FileOutputStream(f);
+		wb.write(outFile);
+		outFile.close();
+		
+		out.println("DEFAULT language was precessed");
 		return keys;
 	}
 	
-	private static void exportLangToExcel(String project, String lang, NodeList strings, File f, Map<String, Integer> keysIndex) throws FileNotFoundException, IOException{
-		System.out.println();
-		System.out.println(String.format("Start processing: '%s'", lang));
+	private void exportLangToExcel(String project, String lang, NodeList strings, File f, Map<String, Integer> keysIndex) throws FileNotFoundException, IOException{
+		out.println();
+		out.println(String.format("Start processing: '%s'", lang));
 		Set<String> missedKeys = new HashSet<String>(keysIndex.keySet());
 		
 		HSSFWorkbook wb = new HSSFWorkbook(new FileInputStream(f));
@@ -258,7 +269,7 @@ public class ToolExport {
 				String key = item.getAttributes().getNamedItem("name").getNodeValue();
 				Integer index = keysIndex.get(key);
 				if(index == null){
-					System.out.println("\t" + key + " - row does not exist");
+					out.println("\t" + key + " - row does not exist");
 					continue;
 				}
 				
@@ -266,7 +277,7 @@ public class ToolExport {
 				HSSFRow row = sheet.getRow(index);
 				
 				HSSFCell cell = row.createCell((int)row.getLastCellNum());
-				cell.setCellValue(deluminateText(item.getTextContent()));
+				cell.setCellValue(item.getTextContent());
 				cell.setCellStyle(textStyle);
 			}
 		}
@@ -274,28 +285,28 @@ public class ToolExport {
 		HSSFCellStyle missedStyle = createMissedStyle(wb);
 		
 		if(!missedKeys.isEmpty()){
-			System.out.println("  MISSED KEYS:");
+			out.println("  MISSED KEYS:");
 		}
 		for(String missedKey : missedKeys){
-			System.out.println("\t" + missedKey);
+			out.println("\t" + missedKey);
 			Integer index = keysIndex.get(missedKey);
 			HSSFRow row = sheet.getRow(index);
 			HSSFCell cell = row.createCell((int)row.getLastCellNum());
 			cell.setCellStyle(missedStyle);
 		}
 		
-		FileOutputStream out = new FileOutputStream(f);
-		wb.write(out);
-		out.close();
+		FileOutputStream outStream = new FileOutputStream(f);
+		wb.write(outStream);
+		outStream.close();
 		
 		if(missedKeys.isEmpty()){
-			System.out.println(String.format("'%s' processed", lang));
+			out.println(String.format("'%s' was processed", lang));
 		}else{
-			System.out.println(String.format("'%s' processed with MISSED KEYS - %d" , lang, missedKeys.size()));
+			out.println(String.format("'%s' was processed with MISSED KEYS - %d" , lang, missedKeys.size()));
 		}
 	}
 	
-	private static String deluminateText(String text){
-		return text.replace("\\'", "'");
-	}
+	/*private static String deluminateText(String text){
+		return text.replace("\\'", "'").replace("\\\"", "\"");
+	}*/
 }

@@ -3,6 +3,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Iterator;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -27,10 +28,12 @@ public class ToolImport {
 
 	private DocumentBuilder builder;
 	private File outResDir;
+	private PrintStream out;
 
-	public ToolImport() throws ParserConfigurationException {
+	public ToolImport(PrintStream out) throws ParserConfigurationException {
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		builder = dbf.newDocumentBuilder();
+		this.out = out == null ? System.out : out;
 	}
 
 	public static void main(String[] args) throws FileNotFoundException, IOException, ParserConfigurationException, TransformerException {
@@ -50,9 +53,25 @@ public class ToolImport {
 		HSSFSheet sheet = wb.getSheetAt(0);
 		
 
-		ToolImport tool = new ToolImport();
+		ToolImport tool = new ToolImport(null);
 		tool.outResDir = new File("out/" + sheet.getSheetName()+ "/res");
 		tool.outResDir.mkdirs();
+		tool.parse(sheet);		
+	}
+	
+	public static void run(PrintStream out, String projectDir, String input) throws FileNotFoundException, IOException, ParserConfigurationException, TransformerException{
+		ToolImport tool = new ToolImport(out);
+		if(input == null || "".equals(input)){
+			tool.out.println("File name is missed");
+			return;
+		}
+		
+		HSSFWorkbook wb = new HSSFWorkbook(new FileInputStream(new File(input)));
+		HSSFSheet sheet = wb.getSheetAt(0);
+		
+
+		tool.outResDir = new File(projectDir, "/res");
+		//tool.outResDir.mkdirs();
 		tool.parse(sheet);		
 	}
 
@@ -62,7 +81,7 @@ public class ToolImport {
 		cells.next();// ignore key
 		int i = 1;
 		while (cells.hasNext()) {
-			String lang = cells.next().getStringCellValue();
+			String lang = cells.next().toString();
 			generateLang(sheet, lang, i);
 			i++;
 		}
@@ -83,7 +102,7 @@ public class ToolImport {
 			if (cell == null) {
 				continue;
 			}
-			String key = cell.getStringCellValue();
+			String key = cell.toString();
 			if (key == null || "".equals(key)){
 				root.appendChild(dom.createTextNode(""));
 				continue;
@@ -93,20 +112,29 @@ public class ToolImport {
 				continue;
 			}
 
-			String value = row.getCell(column).getStringCellValue();// value
+			Cell valueCell = row.getCell(column);
+			if(valueCell == null){
+				addEmptyKeyValue(dom, root, key);
+				continue;
+			}
+			String value = valueCell.toString();// value
 			
-			Element node = dom.createElement("string");
-			node.setAttribute("name", key);
-			node.setTextContent(eluminateText(value));
-			root.appendChild(node);
+			if(value.isEmpty()){
+				addEmptyKeyValue(dom, root, key);
+			}else{
+				Element node = dom.createElement("string");
+				node.setAttribute("name", key);
+				node.setTextContent(value);
+				root.appendChild(node);
+			}
 		}
 		
 		save(dom, lang);
 	}
-
-	private static String eluminateText(String text) {
-		return text.replace("'", "\\'");
-	}
+	
+	private static void addEmptyKeyValue(Document dom, Element root, String key){
+		root.appendChild(dom.createComment(String.format(" TODO: string name=\"%s\" ", key)));
+	} 
 
 	private void save(Document doc, String lang) throws TransformerException {
 		File dir;
@@ -128,4 +156,10 @@ public class ToolImport {
 
 		transformer.transform(source, result);
 	}
+	
+/*
+	private static String eluminateText(String text) {
+		return text.replace("'", "\\'").replace("\"", "\\\"");
+	}
+*/
 }

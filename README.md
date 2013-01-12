@@ -28,3 +28,4 @@ import: -i <input file>
 
 link to binary: http://goo.gl/NTPnc
 
+link to eclipse plugin: http://goo.gl/fwEkU
