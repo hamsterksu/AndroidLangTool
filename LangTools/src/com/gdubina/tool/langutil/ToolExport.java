@@ -81,7 +81,18 @@ public class ToolExport {
 			String dirName = dir.getName();
 			if(dirName.equals(DIR_VALUES)){
 				keysIndex = exportDefLang(dir);
-			}else{
+			}
+		}
+		if (keysIndex == null) {
+			System.out.println("res/values/ folder doesn't exists");
+			return;
+		}
+		for(File dir : res.listFiles()){
+			if(!dir.isDirectory() || !dir.getName().startsWith(DIR_VALUES)){
+				continue;
+			}
+			String dirName = dir.getName();
+			if(!dirName.equals(DIR_VALUES)){
 				int index = dirName.indexOf('-');
 				if(index == -1)
 					continue;
