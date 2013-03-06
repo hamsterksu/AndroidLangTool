@@ -46,7 +46,7 @@ public class ToolExport {
 
 	public static void main(String[] args) throws SAXException, IOException, ParserConfigurationException {
 		if(args == null || args.length == 0){
-			System.out.println("Project dir is missed");
+			System.out.println("Project folder doesn't exists");
 			return;
 		}
 		run(null, args[0], args.length > 1 ? args[1] : null);
@@ -59,7 +59,7 @@ public class ToolExport {
 	public static void run(PrintStream out, String projectDir, String outputFile) throws SAXException, IOException, ParserConfigurationException {
 		ToolExport tool = new ToolExport(out);
 		if(projectDir == null || "".equals(projectDir)){
-			tool.out.println("Project dir is missed");
+			tool.out.println("Project folder doesn't exists");
 			return;
 		}
 		File project = new File(projectDir);
@@ -70,6 +70,10 @@ public class ToolExport {
 	
 	private void export(File project) throws SAXException, IOException{
 		File res = new File(project, "res");
+		if (res == null || !res.exists()) {
+			System.out.println("res folder doesn't exists");
+			return;
+		}
 		for(File dir : res.listFiles()){
 			if(!dir.isDirectory() || !dir.getName().startsWith(DIR_VALUES)){
 				continue;
