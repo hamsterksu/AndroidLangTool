@@ -134,6 +134,18 @@ public class ToolExport {
 		return commentStyle;
 	}
 	
+	private static HSSFCellStyle createPlurarStyle(HSSFWorkbook wb){
+		
+		HSSFFont commentFont = wb.createFont();
+		commentFont.setColor(HSSFColor.GREY_50_PERCENT.index);
+		commentFont.setItalic(true);
+		commentFont.setFontHeightInPoints((short)12);
+		
+		HSSFCellStyle commentStyle = wb.createCellStyle();
+		commentStyle.setFont(commentFont);
+		return commentStyle;
+	}
+	
 	private static HSSFCellStyle createKeyStyle(HSSFWorkbook wb){
 		HSSFFont bold = wb.createFont();
 		bold.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
@@ -195,6 +207,7 @@ public class ToolExport {
 		HSSFWorkbook wb = new HSSFWorkbook();
 		
 		HSSFCellStyle commentStyle = createCommentStyle(wb);
+		HSSFCellStyle plurarStyle = createPlurarStyle(wb);
 		HSSFCellStyle keyStyle = createKeyStyle(wb);
 		HSSFCellStyle textStyle = createTextStyle(wb);
 	
@@ -205,6 +218,7 @@ public class ToolExport {
 		sheet.createRow(rowIndex++);
 		createTilte(wb, sheet);
 		addLang2Tilte(wb, sheet, "default");
+		
 		for(int i = 0; i < strings.getLength(); i++){
 			Node item = strings.item(i);
 			if(item.getNodeType() == Node.TEXT_NODE){
@@ -235,6 +249,34 @@ public class ToolExport {
 				cell = row.createCell(1);
 				cell.setCellStyle(textStyle);
 				cell.setCellValue(item.getTextContent());
+			} else if("plurals".equals(item.getNodeName())){
+				String key = item.getAttributes().getNamedItem("name").getNodeValue();
+				String plurarName = key; 
+				
+				HSSFRow row = sheet.createRow(rowIndex++);
+				HSSFCell cell = row.createCell(0);
+				cell.setCellValue(String.format("//plurals: %s", plurarName));
+				cell.setCellStyle(plurarStyle);
+				
+				NodeList items = item.getChildNodes();
+				for(int j = 0; j < items.getLength(); j++){
+					Node plurarItem = items.item(j);
+					if("item".equals(plurarItem.getNodeName())){
+						String itemKey = plurarName + "#" + plurarItem.getAttributes().getNamedItem("quantity").getNodeValue();
+						keys.put(itemKey, rowIndex);
+						
+						HSSFRow itemRow = sheet.createRow(rowIndex++);
+						
+						HSSFCell itemCell = itemRow.createCell(0);
+						itemCell.setCellValue(itemKey);
+						itemCell.setCellStyle(keyStyle);
+						
+						itemCell = itemRow.createCell(1);
+						itemCell.setCellStyle(textStyle);
+						itemCell.setCellValue(plurarItem.getTextContent());
+					}
+				}
+				
 			}
 		}
 		sheet.createFreezePane(1, 1);
@@ -279,6 +321,29 @@ public class ToolExport {
 				HSSFCell cell = row.createCell((int)row.getLastCellNum());
 				cell.setCellValue(item.getTextContent());
 				cell.setCellStyle(textStyle);
+			} else if("plurals".equals(item.getNodeName())){
+				String key = item.getAttributes().getNamedItem("name").getNodeValue();
+				String plurarName = key;
+				
+				NodeList items = item.getChildNodes();
+				for(int j = 0; j < items.getLength(); j++){
+					Node plurarItem = items.item(j);
+					if("item".equals(plurarItem.getNodeName())){
+						key = plurarName + "#" + plurarItem.getAttributes().getNamedItem("quantity").getNodeValue();
+						Integer index = keysIndex.get(key);
+						if(index == null){
+							out.println("\t" + key + " - row does not exist");
+							continue;
+						}
+						missedKeys.remove(key);
+						
+						HSSFRow row = sheet.getRow(index);
+						
+						HSSFCell cell = row.createCell((int)row.getLastCellNum());
+						cell.setCellValue(plurarItem.getTextContent());
+						cell.setCellStyle(textStyle);
+					}
+				}
 			}
 		}
 		

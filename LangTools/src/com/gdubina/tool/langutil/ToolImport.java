@@ -95,6 +95,8 @@ public class ToolImport {
 		
 		Iterator<Row> iterator = sheet.rowIterator();
 		iterator.next();//ignore first row;
+		Element pluralsNode = null;
+		String plurarName = null;
 		
 		while (iterator.hasNext()) {
 			HSSFRow row = (HSSFRow) iterator.next();
@@ -111,22 +113,51 @@ public class ToolImport {
 				root.appendChild(dom.createComment(key.substring(3, key.length() - 3)));
 				continue;
 			}
-
-			Cell valueCell = row.getCell(column);
-			if(valueCell == null){
-				addEmptyKeyValue(dom, root, key);
+			
+			if(key.startsWith("//")){
+				root.appendChild(dom.createComment(key.substring(2)));
 				continue;
 			}
-			String value = valueCell.toString();// value
 			
-			if(value.isEmpty()){
-				addEmptyKeyValue(dom, root, key);
+			int plurarIndex = key.indexOf("#");
+			if(plurarIndex == -1){//string 
+				Cell valueCell = row.getCell(column);
+				if(valueCell == null){
+					addEmptyKeyValue(dom, root, key);
+					continue;
+				}
+				String value = valueCell.toString();// value
+				
+				if(value.isEmpty()){
+					addEmptyKeyValue(dom, root, key);
+				}else {
+					Element node = dom.createElement("string");
+					node.setAttribute("name", key);
+					node.setTextContent(value);
+					root.appendChild(node);
+				}
 			}else{
-				Element node = dom.createElement("string");
-				node.setAttribute("name", key);
-				node.setTextContent(value);
-				root.appendChild(node);
+				Cell valueCell = row.getCell(column);
+				String value = "";
+				if(valueCell != null){
+					value = valueCell.toString();// value
+				}
+				String plurarNameNew = key.substring(0, plurarIndex);
+				String quantity = key.substring(plurarIndex + 1);
+				if(!plurarNameNew.equals(plurarName)){
+					plurarName = plurarNameNew; 
+					pluralsNode = dom.createElement("plurals");
+					pluralsNode.setAttribute("name", plurarName);
+				}
+				Element item = dom.createElement("item");
+				item.setAttribute("quantity", quantity);
+				item.setTextContent(value);
+				
+				pluralsNode.appendChild(item);
+				
+				root.appendChild(pluralsNode);				
 			}
+
 		}
 		
 		save(dom, lang);
