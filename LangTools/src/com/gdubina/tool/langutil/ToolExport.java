@@ -285,7 +285,7 @@ public class ToolExport {
 		wb.write(outFile);
 		outFile.close();
 		
-		out.println("DEFAULT language was precessed");
+		out.println("DEFAULT language was processed");
 		return keys;
 	}
 	
