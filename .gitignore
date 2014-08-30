@@ -1,3 +1,8 @@
 /.metadata
 /AndroidToolLangPlugin/.settings
 /AndroidToolLangPlugin/bin
+
+.idea
+*.iml
+LangTools/out
+.DS_Store

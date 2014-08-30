@@ -96,8 +96,10 @@ public class ToolImport {
 		Iterator<Row> iterator = sheet.rowIterator();
 		iterator.next();//ignore first row;
 		Element pluralsNode = null;
+		Element arraysNode = null;
 		String plurarName = null;
-		
+		String arrayName = null;
+
 		while (iterator.hasNext()) {
 			HSSFRow row = (HSSFRow) iterator.next();
 			Cell cell = row.getCell(0);// android key
@@ -120,7 +122,8 @@ public class ToolImport {
 			}
 			
 			int plurarIndex = key.indexOf("#");
-			if(plurarIndex == -1){//string 
+			int arrayDotIndex = key.indexOf(".");
+			if(plurarIndex == -1 && arrayDotIndex == -1){//string
 				Cell valueCell = row.getCell(column);
 				if(valueCell == null){
 					addEmptyKeyValue(dom, root, key);
@@ -136,6 +139,24 @@ public class ToolImport {
 					node.setTextContent(value);
 					root.appendChild(node);
 				}
+			} else if (arrayDotIndex != -1) {
+				Cell valueCell = row.getCell(column);
+				String value = "";
+				if(valueCell != null){
+					value = valueCell.toString();// value
+				}
+				String arrayNameNew = key.substring(0, arrayDotIndex);
+				if(!arrayNameNew.equals(arrayName)){
+					arrayName = arrayNameNew;
+					arraysNode = dom.createElement("string-array");
+					arraysNode.setAttribute("name", arrayName);
+				}
+				Element item = dom.createElement("item");
+				item.setTextContent(value);
+
+				arraysNode.appendChild(item);
+
+				root.appendChild(arraysNode);
 			}else{
 				Cell valueCell = row.getCell(column);
 				String value = "";

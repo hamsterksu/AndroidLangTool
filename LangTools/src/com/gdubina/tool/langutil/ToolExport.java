@@ -276,7 +276,34 @@ public class ToolExport {
 						itemCell.setCellValue(plurarItem.getTextContent());
 					}
 				}
-				
+			} else if("string-array".equals(item.getNodeName())){
+				String key = item.getAttributes().getNamedItem("name").getNodeValue();
+				String arrayName = key;
+
+				HSSFRow row = sheet.createRow(rowIndex++);
+				HSSFCell cell = row.createCell(0);
+				cell.setCellValue(String.format("//string-array: %s", arrayName));
+				cell.setCellStyle(plurarStyle);
+
+				NodeList items = item.getChildNodes();
+				int idx = 0;
+				for(int j = 0; j < items.getLength(); j++){
+					Node arrayItem = items.item(j);
+					if("item".equals(arrayItem.getNodeName())){
+						String itemKey = arrayName + "." + idx++;
+						keys.put(itemKey, rowIndex);
+
+						HSSFRow itemRow = sheet.createRow(rowIndex++);
+
+						HSSFCell itemCell = itemRow.createCell(0);
+						itemCell.setCellValue(itemKey);
+						itemCell.setCellStyle(keyStyle);
+
+						itemCell = itemRow.createCell(1);
+						itemCell.setCellStyle(textStyle);
+						itemCell.setCellValue(arrayItem.getTextContent());
+					}
+				}
 			}
 		}
 		sheet.createFreezePane(1, 1);
@@ -341,6 +368,30 @@ public class ToolExport {
 						
 						HSSFCell cell = row.createCell((int)row.getLastCellNum());
 						cell.setCellValue(plurarItem.getTextContent());
+						cell.setCellStyle(textStyle);
+					}
+				}
+			} else if ("string-array".equals(item.getNodeName())) {
+				String key = item.getAttributes().getNamedItem("name").getNodeValue();
+				String arrayName = key;
+
+				NodeList items = item.getChildNodes();
+				int idx = 0;
+				for(int j = 0; j < items.getLength(); j++){
+					Node arrayItem = items.item(j);
+					if("item".equals(arrayItem.getNodeName())){
+						key = arrayName + "." + idx++;
+						Integer index = keysIndex.get(key);
+						if(index == null){
+							out.println("\t" + key + " - row does not exist");
+							continue;
+						}
+						missedKeys.remove(key);
+
+						HSSFRow row = sheet.getRow(index);
+
+						HSSFCell cell = row.createCell((int) row.getLastCellNum());
+						cell.setCellValue(arrayItem.getTextContent());
 						cell.setCellStyle(textStyle);
 					}
 				}
