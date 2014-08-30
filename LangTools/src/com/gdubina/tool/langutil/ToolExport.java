@@ -37,6 +37,7 @@ public class ToolExport {
 	private String project;
 	private Map<String, Integer> keysIndex;
 	private PrintStream out;
+	private String inputFileName;
 	
 	public ToolExport(PrintStream out) throws ParserConfigurationException{
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -49,14 +50,18 @@ public class ToolExport {
 			System.out.println("Project dir is missed");
 			return;
 		}
-		run(null, args[0], args.length > 1 ? args[1] : null);
+		run(null, args[0], args.length > 1 ? args[1] : null, null);
 	}
 	
 	public static void run(String projectDir, String outputFile) throws SAXException, IOException, ParserConfigurationException {
-		run(null, projectDir, outputFile);
+		run(null, projectDir, outputFile, null);
+	}
+
+	public static void run(String projectDir, String outputFile, String inFileName) throws SAXException, IOException, ParserConfigurationException {
+		run(null, projectDir, outputFile, inFileName);
 	}
 	
-	public static void run(PrintStream out, String projectDir, String outputFile) throws SAXException, IOException, ParserConfigurationException {
+	public static void run(PrintStream out, String projectDir, String outputFile, String inFileName) throws SAXException, IOException, ParserConfigurationException {
 		ToolExport tool = new ToolExport(out);
 		if(projectDir == null || "".equals(projectDir)){
 			tool.out.println("Project dir is missed");
@@ -65,6 +70,7 @@ public class ToolExport {
 		File project = new File(projectDir);
 		tool.outExcelFile = new File(outputFile != null ? outputFile : "exported_strings_" + System.currentTimeMillis() + ".xls");
 		tool.project = project.getName();
+		tool.inputFileName = inFileName == null ? "strings.xml" : inFileName;
 		tool.export(project);
 	}
 	
@@ -88,7 +94,7 @@ public class ToolExport {
 	}
 	
 	private void exportLang(String lang, File valueDir) throws FileNotFoundException, IOException, SAXException{
-		File stringFile = new File(valueDir, "strings.xml");
+		File stringFile = new File(valueDir, inputFileName);
 		if(!stringFile.exists()){
 			return;
 		}
@@ -96,7 +102,7 @@ public class ToolExport {
 	}
 	
 	private Map<String, Integer> exportDefLang(File valueDir) throws FileNotFoundException, IOException, SAXException{
-		File stringFile = new File(valueDir, "strings.xml");
+		File stringFile = new File(valueDir, inputFileName);
 		if(!stringFile.exists()){
 			return null;
 		}
