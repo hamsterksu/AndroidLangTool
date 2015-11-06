@@ -37,6 +37,7 @@ public class ToolExport {
 	private String project;
 	private Map<String, Integer> keysIndex;
 	private PrintStream out;
+	private String inputFileName;
 	
 	public ToolExport(PrintStream out) throws ParserConfigurationException{
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -49,14 +50,18 @@ public class ToolExport {
 			System.out.println("Project dir is missed");
 			return;
 		}
-		run(null, args[0], args.length > 1 ? args[1] : null);
+		run(null, args[0], args.length > 1 ? args[1] : null, null);
 	}
 	
 	public static void run(String projectDir, String outputFile) throws SAXException, IOException, ParserConfigurationException {
-		run(null, projectDir, outputFile);
+		run(null, projectDir, outputFile, null);
+	}
+
+	public static void run(String projectDir, String outputFile, String inFileName) throws SAXException, IOException, ParserConfigurationException {
+		run(null, projectDir, outputFile, inFileName);
 	}
 	
-	public static void run(PrintStream out, String projectDir, String outputFile) throws SAXException, IOException, ParserConfigurationException {
+	public static void run(PrintStream out, String projectDir, String outputFile, String inFileName) throws SAXException, IOException, ParserConfigurationException {
 		ToolExport tool = new ToolExport(out);
 		if(projectDir == null || "".equals(projectDir)){
 			tool.out.println("Project dir is missed");
@@ -65,6 +70,7 @@ public class ToolExport {
 		File project = new File(projectDir);
 		tool.outExcelFile = new File(outputFile != null ? outputFile : "exported_strings_" + System.currentTimeMillis() + ".xls");
 		tool.project = project.getName();
+		tool.inputFileName = inFileName == null ? "strings.xml" : inFileName;
 		tool.export(project);
 	}
 	
@@ -88,7 +94,7 @@ public class ToolExport {
 	}
 	
 	private void exportLang(String lang, File valueDir) throws FileNotFoundException, IOException, SAXException{
-		File stringFile = new File(valueDir, "strings.xml");
+		File stringFile = new File(valueDir, inputFileName);
 		if(!stringFile.exists()){
 			return;
 		}
@@ -96,7 +102,7 @@ public class ToolExport {
 	}
 	
 	private Map<String, Integer> exportDefLang(File valueDir) throws FileNotFoundException, IOException, SAXException{
-		File stringFile = new File(valueDir, "strings.xml");
+		File stringFile = new File(valueDir, inputFileName);
 		if(!stringFile.exists()){
 			return null;
 		}
@@ -276,7 +282,34 @@ public class ToolExport {
 						itemCell.setCellValue(plurarItem.getTextContent());
 					}
 				}
-				
+			} else if("string-array".equals(item.getNodeName())){
+				String key = item.getAttributes().getNamedItem("name").getNodeValue();
+				String arrayName = key;
+
+				HSSFRow row = sheet.createRow(rowIndex++);
+				HSSFCell cell = row.createCell(0);
+				cell.setCellValue(String.format("//string-array: %s", arrayName));
+				cell.setCellStyle(plurarStyle);
+
+				NodeList items = item.getChildNodes();
+				int idx = 0;
+				for(int j = 0; j < items.getLength(); j++){
+					Node arrayItem = items.item(j);
+					if("item".equals(arrayItem.getNodeName())){
+						String itemKey = arrayName + "." + idx++;
+						keys.put(itemKey, rowIndex);
+
+						HSSFRow itemRow = sheet.createRow(rowIndex++);
+
+						HSSFCell itemCell = itemRow.createCell(0);
+						itemCell.setCellValue(itemKey);
+						itemCell.setCellStyle(keyStyle);
+
+						itemCell = itemRow.createCell(1);
+						itemCell.setCellStyle(textStyle);
+						itemCell.setCellValue(arrayItem.getTextContent());
+					}
+				}
 			}
 		}
 		sheet.createFreezePane(1, 1);
@@ -341,6 +374,30 @@ public class ToolExport {
 						
 						HSSFCell cell = row.createCell((int)row.getLastCellNum());
 						cell.setCellValue(plurarItem.getTextContent());
+						cell.setCellStyle(textStyle);
+					}
+				}
+			} else if ("string-array".equals(item.getNodeName())) {
+				String key = item.getAttributes().getNamedItem("name").getNodeValue();
+				String arrayName = key;
+
+				NodeList items = item.getChildNodes();
+				int idx = 0;
+				for(int j = 0; j < items.getLength(); j++){
+					Node arrayItem = items.item(j);
+					if("item".equals(arrayItem.getNodeName())){
+						key = arrayName + "." + idx++;
+						Integer index = keysIndex.get(key);
+						if(index == null){
+							out.println("\t" + key + " - row does not exist");
+							continue;
+						}
+						missedKeys.remove(key);
+
+						HSSFRow row = sheet.getRow(index);
+
+						HSSFCell cell = row.createCell((int) row.getLastCellNum());
+						cell.setCellValue(arrayItem.getTextContent());
 						cell.setCellStyle(textStyle);
 					}
 				}
