@@ -53,6 +53,11 @@ public class ToolImport {
 			System.out.println("File name is missed");
 			return;
 		}
+
+		if (stringsFile == null || stringsFile.length() == 0) {
+			stringsFile = "strings.xml";
+		}
+
 		HSSFWorkbook wb = new HSSFWorkbook(new FileInputStream(new File(input)));
 		HSSFSheet sheet = wb.getSheetAt(0);
 		
@@ -208,9 +213,6 @@ public class ToolImport {
 		transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
 		
 		DOMSource source = new DOMSource(doc);
-		if (fileName == null || fileName.length() == 0) {
-			fileName = "strings.xml";
-		}
 		StreamResult result = new StreamResult(new File(dir, fileName));
 
 		transformer.transform(source, result);
