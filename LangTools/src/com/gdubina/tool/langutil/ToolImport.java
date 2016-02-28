@@ -45,10 +45,19 @@ public class ToolImport {
 	}
 	
 	public static void run(String input) throws FileNotFoundException, IOException, ParserConfigurationException, TransformerException{
+		run(input, null);
+	}
+	
+	public static void run(String input, String stringsFile) throws FileNotFoundException, IOException, ParserConfigurationException, TransformerException{
 		if(input == null || "".equals(input)){
 			System.out.println("File name is missed");
 			return;
 		}
+
+		if (stringsFile == null || stringsFile.length() == 0) {
+			stringsFile = "strings.xml";
+		}
+
 		HSSFWorkbook wb = new HSSFWorkbook(new FileInputStream(new File(input)));
 		HSSFSheet sheet = wb.getSheetAt(0);
 		
@@ -56,10 +65,10 @@ public class ToolImport {
 		ToolImport tool = new ToolImport(null);
 		tool.outResDir = new File("out/" + sheet.getSheetName()+ "/res");
 		tool.outResDir.mkdirs();
-		tool.parse(sheet);		
+		tool.parse(sheet, stringsFile);		
 	}
 	
-	public static void run(PrintStream out, String projectDir, String input) throws FileNotFoundException, IOException, ParserConfigurationException, TransformerException{
+	public static void run(PrintStream out, String projectDir, String input, String stringsFile) throws FileNotFoundException, IOException, ParserConfigurationException, TransformerException{
 		ToolImport tool = new ToolImport(out);
 		if(input == null || "".equals(input)){
 			tool.out.println("File name is missed");
@@ -72,22 +81,22 @@ public class ToolImport {
 
 		tool.outResDir = new File(projectDir, "/res");
 		//tool.outResDir.mkdirs();
-		tool.parse(sheet);		
+		tool.parse(sheet, stringsFile);		
 	}
 
-	private void parse(HSSFSheet sheet) throws IOException, TransformerException {
+	private void parse(HSSFSheet sheet, String stringsFile) throws IOException, TransformerException {
 		Row row = sheet.getRow(0);
 		Iterator<Cell> cells = row.cellIterator();
 		cells.next();// ignore key
 		int i = 1;
 		while (cells.hasNext()) {
 			String lang = cells.next().toString();
-			generateLang(sheet, lang, i);
+			generateLang(sheet, lang, i, stringsFile);
 			i++;
 		}
 	}
 
-	private void generateLang(HSSFSheet sheet, String lang, int column) throws IOException, TransformerException {
+	private void generateLang(HSSFSheet sheet, String lang, int column, String stringsFile) throws IOException, TransformerException {
 		
 		Document dom = builder.newDocument();
 		Element root = dom.createElement("resources");
@@ -181,14 +190,14 @@ public class ToolImport {
 
 		}
 		
-		save(dom, lang);
+		save(dom, lang, stringsFile);
 	}
 	
 	private static void addEmptyKeyValue(Document dom, Element root, String key){
 		root.appendChild(dom.createComment(String.format(" TODO: string name=\"%s\" ", key)));
 	} 
 
-	private void save(Document doc, String lang) throws TransformerException {
+	private void save(Document doc, String lang, String fileName) throws TransformerException {
 		File dir;
 		if("default".equals(lang) || lang == null || "".equals(lang)){
 			dir = new File(outResDir, "values");
@@ -204,7 +213,7 @@ public class ToolImport {
 		transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
 		
 		DOMSource source = new DOMSource(doc);
-		StreamResult result = new StreamResult(new File(dir, "strings.xml"));
+		StreamResult result = new StreamResult(new File(dir, fileName));
 
 		transformer.transform(source, result);
 	}

@@ -50,7 +50,7 @@ public class ToolExport {
 			System.out.println("Project folder doesn't exists");
 			return;
 		}
-		run(null, args[0], args.length > 1 ? args[1] : null, null);
+		run(null, args[0], args.length > 1 ? args[1] : null, args.length > 2 ? args[2] : null);
 	}
 	
 	public static void run(String projectDir, String outputFile) throws SAXException, IOException, ParserConfigurationException {
