@@ -89,10 +89,6 @@ public class ToolExport {
 				keysIndex = exportDefLang(dir);
 			}
 		}
-		if (keysIndex == null) {
-			System.out.println("res/values/ folder doesn't exists");
-			return;
-		}
 		for(File dir : res.listFiles()){
 			if(!dir.isDirectory() || !dir.getName().startsWith(DIR_VALUES)){
 				continue;
